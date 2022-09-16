@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.bioelectronic</groupId>
+    <artifactId>sn-scaffold</artifactId>
+    <version>1.0.0</version>
+    <packaging>pom</packaging>
+
+    <properties>
+        <sn-framework.version>1.0.0</sn-framework.version>
+        <maven.compiler.source>8</maven.compiler.source>
+        <maven.compiler.target>8</maven.compiler.target>
+        <sn-bot.dir>D:/sn-robot-dev/release</sn-bot.dir>
+    </properties>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <configuration>
+                    <!-- 指定打包的jar包输出路径 -->
+                    <outputDirectory>${sn-bot.dir}/extension</outputDirectory>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>copy-dependencies</id>
+                        <phase>prepare-package</phase>
+                        <goals>
+                            <goal>copy-dependencies</goal>
+                        </goals>
+                        <configuration>
+                            <excludeArtifactIds>
+                                junit,
+                                jackson-core,
+                                jackson-databind,
+                                jackson-annotations,
+                                lombok,
+                                cglib,
+                                slf4j-api,
+                                log4j-slf4j-impl,
+                                log4j-api,
+                                log4j-core,
+                                log4j-to-slf4j,
+                                sn-api,
+                                sn-framework,
+                                sn-commons,
+                                commons-codec,
+                                commons-io,
+                                tika-core
+                            </excludeArtifactIds>
+                            <excludeScope>provided</excludeScope>
+                            <outputDirectory>${sn-bot.dir}/extension/lib</outputDirectory>
+                            <overWriteReleases>false</overWriteReleases>
+                            <overWriteSnapshots>false</overWriteSnapshots>
+                            <overWriteIfNewer>true</overWriteIfNewer>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+
+
+    <dependencies>
+        <dependency>
+            <groupId>com.bioelectronic</groupId>
+            <artifactId>sn-framework</artifactId>
+            <version>${sn-framework.version}</version>
+            <scope>provided</scope>
+        </dependency>
+    </dependencies>
+
+
+
+</project>
