@@ -4,7 +4,7 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>com.bioelectronic</groupId>
+    <groupId>top.bioelectronic</groupId>
     <artifactId>sn-scaffold</artifactId>
     <version>1.0.0</version>
     <packaging>pom</packaging>
@@ -71,7 +71,7 @@
 
     <dependencies>
         <dependency>
-            <groupId>com.bioelectronic</groupId>
+            <groupId>top.bioelectronic</groupId>
             <artifactId>sn-framework</artifactId>
             <version>${sn-framework.version}</version>
             <scope>provided</scope>

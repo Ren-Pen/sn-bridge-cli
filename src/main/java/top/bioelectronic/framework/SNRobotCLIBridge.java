@@ -1,12 +1,12 @@
-package com.bioelectronic.framework;
+package top.bioelectronic.framework;
 
 import lombok.extern.slf4j.Slf4j;
-import com.bioelectronic.framework.core.BaseRobot;
-import com.bioelectronic.framework.plugin.PluginManager;
-import com.bioelectronic.sdk.framework.DefaultIGUIBridge;
-import com.bioelectronic.sdk.framework.SystemInstance;
-import com.bioelectronic.sdk.framework.annotations.Mount;
-import com.bioelectronic.sdk.logger.Marker;
+import top.bioelectronic.framework.core.BaseRobot;
+import top.bioelectronic.framework.plugin.PluginManager;
+import top.bioelectronic.sdk.framework.DefaultIGUIBridge;
+import top.bioelectronic.sdk.framework.SystemInstance;
+import top.bioelectronic.sdk.framework.annotations.Mount;
+import top.bioelectronic.sdk.logger.Marker;
 
 @Slf4j
 @SystemInstance
@@ -30,8 +30,6 @@ public class SNRobotCLIBridge extends DefaultIGUIBridge {
 
     @Override
     public void main(String[] args) {
-        robot.login();
-        manager.load("DemoPlugin-1.0.jar");
         log.info("环境已部署，正在运行");
     }
 

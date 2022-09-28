@@ -9,7 +9,7 @@
 
     <parent>
         <artifactId>sn-scaffold</artifactId>
-        <groupId>com.bioelectronic</groupId>
+        <groupId>top.bioelectronic</groupId>
         <version>1.0.0</version>
     </parent>
 
