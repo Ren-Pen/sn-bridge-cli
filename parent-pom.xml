@@ -4,13 +4,13 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>top.bioelectronic</groupId>
-    <artifactId>sn-scaffold</artifactId>
+    <groupId>com.slimenano</groupId>
+    <artifactId>slimenano-scaffold</artifactId>
     <version>1.0.0</version>
     <packaging>pom</packaging>
 
     <properties>
-        <sn-framework.version>1.0.0</sn-framework.version>
+        <slimenano-framework.version>1.0.0</slimenano-framework.version>
         <maven.compiler.source>8</maven.compiler.source>
         <maven.compiler.target>8</maven.compiler.target>
         <sn-bot.dir>D:/sn-robot-dev/release</sn-bot.dir>
@@ -71,9 +71,9 @@
 
     <dependencies>
         <dependency>
-            <groupId>top.bioelectronic</groupId>
-            <artifactId>sn-framework</artifactId>
-            <version>${sn-framework.version}</version>
+            <groupId>com.slimenano</groupId>
+            <artifactId>slimenano-framework</artifactId>
+            <version>${slimenano-framework.version}</version>
             <scope>provided</scope>
         </dependency>
     </dependencies>

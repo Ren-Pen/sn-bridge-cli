@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+            targetNamespace="http://www.bioelectronic.top/cli"
+            elementFormDefault="qualified"
+            xmlns:cli="http://www.bioelectronic.top/cli">
+
+    <xsd:element name="console">
+        <xsd:complexType>
+            <xsd:sequence>
+                <xsd:element type="cli:command" name="command" maxOccurs="unbounded"/>
+            </xsd:sequence>
+            <xsd:attribute name="prefix" use="required">
+                <xsd:simpleType>
+                    <xsd:restriction base="xsd:string">
+                        <xsd:pattern value="[A-Za-z0-9_$.]+"/>
+                    </xsd:restriction>
+                </xsd:simpleType>
+            </xsd:attribute>
+        </xsd:complexType>
+        <xsd:unique name="commandUnique">
+            <xsd:selector xpath="cli:command"/>
+            <xsd:field xpath="@name"/>
+        </xsd:unique>
+    </xsd:element>
+
+    <xsd:complexType name="command">
+        <xsd:all>
+            <xsd:element name="arguments">
+                <xsd:complexType>
+                    <xsd:sequence>
+                        <xsd:element type="cli:argument" name="argument" maxOccurs="unbounded" minOccurs="0"/>
+                    </xsd:sequence>
+                </xsd:complexType>
+                <xsd:unique name="argsUnique">
+                    <xsd:selector xpath="cli:argument"/>
+                    <xsd:field xpath="@name"/>
+                </xsd:unique>
+                <xsd:unique name="SargsUnique">
+                    <xsd:selector xpath="cli:argument"/>
+                    <xsd:field xpath="@simplify"/>
+                </xsd:unique>
+                <xsd:key name="argumentNameKey">
+                    <xsd:selector xpath="cli:argument"/>
+                    <xsd:field xpath="@name"/>
+                </xsd:key>
+                <xsd:keyref name="argumentEXKeyRef" refer="cli:argumentNameKey">
+                    <xsd:selector xpath="cli:argument/cli:excludes/cli:exclude"/>
+                    <xsd:field xpath="."/>
+                </xsd:keyref>
+            </xsd:element>
+        </xsd:all>
+        <xsd:attribute name="bean" use="required">
+            <xsd:simpleType>
+                <xsd:restriction base="xsd:string">
+                    <xsd:pattern value="(classpath:[A-Za-z_$][A-Za-z0-9_$]*(\.[A-Za-z_$][A-Za-z0-9_$]*)*)|(name:.*)"/>
+                </xsd:restriction>
+            </xsd:simpleType>
+        </xsd:attribute>
+        <xsd:attribute name="method" use="required">
+            <xsd:simpleType>
+                <xsd:restriction base="xsd:string">
+                    <xsd:pattern value="[A-Za-z_$][A-Za-z0-9_$]*"/>
+                </xsd:restriction>
+            </xsd:simpleType>
+        </xsd:attribute>
+        <xsd:attribute name="name" use="required">
+            <xsd:simpleType>
+                <xsd:restriction base="xsd:string">
+                    <xsd:pattern value="[A-Za-z0-9_$]+"/>
+                </xsd:restriction>
+            </xsd:simpleType>
+        </xsd:attribute>
+        <xsd:attribute name="description">
+            <xsd:simpleType>
+                <xsd:restriction base="xsd:string">
+                    <xsd:minLength value="1"/>
+                </xsd:restriction>
+            </xsd:simpleType>
+        </xsd:attribute>
+    </xsd:complexType>
+
+    <xsd:complexType name="argument">
+        <xsd:sequence>
+            <xsd:element name="excludes" minOccurs="0">
+                <xsd:complexType>
+                    <xsd:sequence>
+                        <xsd:element name="exclude" minOccurs="0" maxOccurs="unbounded" type="xsd:string"/>
+                    </xsd:sequence>
+                </xsd:complexType>
+            </xsd:element>
+        </xsd:sequence>
+        <xsd:attribute name="name" use="required">
+            <xsd:simpleType>
+                <xsd:restriction base="xsd:string">
+                    <xsd:pattern value="[A-Za-z0-9_$-]+"/>
+                </xsd:restriction>
+            </xsd:simpleType>
+        </xsd:attribute>
+        <xsd:attribute name="simplify" type="cli:simple"/>
+        <xsd:attribute name="description">
+            <xsd:simpleType>
+                <xsd:restriction base="xsd:string">
+                    <xsd:minLength value="1"/>
+                </xsd:restriction>
+            </xsd:simpleType>
+        </xsd:attribute>
+    </xsd:complexType>
+
+    <xsd:simpleType name="simple">
+        <xsd:restriction base="xsd:string">
+            <xsd:pattern value="[A-Za-z0-9]"/>
+        </xsd:restriction>
+    </xsd:simpleType>
+
+</xsd:schema>
