@@ -1,17 +1,15 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <console xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-        xsi:schemaLocation="http://www.bioelectronic.top/cli http://www.bioelectronic.top/schema/bridge-cli.xsd"
-        xmlns="http://www.bioelectronic.top/cli"
-        prefix="system">
-    <command bean="name:command:help" method="exec" name="help" description="显示帮助列表">
+         xsi:schemaLocation="http://www.bioelectronic.top/cli http://www.bioelectronic.top/schema/bridge-cli.xsd"
+         xmlns="http://www.bioelectronic.top/cli"
+         prefix="system">
+    <command bean="name:command:help" method="exec" name="help" description="显示帮助列表" empty="FORCE"/>
+    <command bean="name:command:exit" method="exec" name="exit" empty="FORCE" description="退出"/>
+    <command bean="name:command:bot" method="logout" name="logout" empty="FORCE" description="登出"/>
+
+    <command bean="name:command:plugin" method="exec" name="plugin" description="插件管理">
         <arguments>
-            <argument name="debug" description="调试选项" simplify="d"/>
-            <argument name="page" description="显示页数" simplify="p"/>
-        </arguments>
-    </command>
-    <command bean="name:command:pluginLoad" method="exec" name="plugin" description="插件管理">
-        <arguments>
-            <argument name="load" simplify="l" description="加载">
+            <argument name="load" simplify="l" description="加载" empty="FALSE">
                 <excludes>
                     <exclude>unload</exclude>
                 </excludes>
@@ -20,5 +18,13 @@
         </arguments>
     </command>
 
+    <command bean="name:command:bot" method="login" name="login" description="登录">
+        <arguments>
+            <argument name="account" simplify="a" empty="FALSE" description="账号"/>
+            <argument name="password" simplify="p" empty="FALSE" description="密码"/>
+            <argument name="protocol" simplify="t" empty="FALSE" description="协议"/>
+            <argument name="save" simplify="s" empty="FORCE" description="保存登录信息"/>
+        </arguments>
+    </command>
 
 </console>

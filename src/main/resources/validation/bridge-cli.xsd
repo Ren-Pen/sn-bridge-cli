@@ -25,7 +25,7 @@
 
     <xsd:complexType name="command">
         <xsd:all>
-            <xsd:element name="arguments">
+            <xsd:element name="arguments" minOccurs="0">
                 <xsd:complexType>
                     <xsd:sequence>
                         <xsd:element type="cli:argument" name="argument" maxOccurs="unbounded" minOccurs="0"/>
@@ -39,12 +39,20 @@
                     <xsd:selector xpath="cli:argument"/>
                     <xsd:field xpath="@simplify"/>
                 </xsd:unique>
+                <xsd:unique name="includeUexclude">
+                    <xsd:selector xpath="cli:argument/cli:includes/cli:include|cli:argument/cli:excludes/cli:exclude"/>
+                    <xsd:field xpath="."/>
+                </xsd:unique>
                 <xsd:key name="argumentNameKey">
                     <xsd:selector xpath="cli:argument"/>
                     <xsd:field xpath="@name"/>
                 </xsd:key>
                 <xsd:keyref name="argumentEXKeyRef" refer="cli:argumentNameKey">
                     <xsd:selector xpath="cli:argument/cli:excludes/cli:exclude"/>
+                    <xsd:field xpath="."/>
+                </xsd:keyref>
+                <xsd:keyref name="argumentICKeyRef" refer="cli:argumentNameKey">
+                    <xsd:selector xpath="cli:argument/cli:includes/cli:include"/>
                     <xsd:field xpath="."/>
                 </xsd:keyref>
             </xsd:element>
@@ -77,10 +85,18 @@
                 </xsd:restriction>
             </xsd:simpleType>
         </xsd:attribute>
+        <xsd:attribute name="empty" type="cli:empty" default="DEFAULT"/>
     </xsd:complexType>
 
     <xsd:complexType name="argument">
-        <xsd:sequence>
+        <xsd:all>
+            <xsd:element name="includes" minOccurs="0">
+                <xsd:complexType>
+                    <xsd:sequence>
+                        <xsd:element name="include" minOccurs="0" maxOccurs="unbounded" type="xsd:string"/>
+                    </xsd:sequence>
+                </xsd:complexType>
+            </xsd:element>
             <xsd:element name="excludes" minOccurs="0">
                 <xsd:complexType>
                     <xsd:sequence>
@@ -88,7 +104,7 @@
                     </xsd:sequence>
                 </xsd:complexType>
             </xsd:element>
-        </xsd:sequence>
+        </xsd:all>
         <xsd:attribute name="name" use="required">
             <xsd:simpleType>
                 <xsd:restriction base="xsd:string">
@@ -104,11 +120,21 @@
                 </xsd:restriction>
             </xsd:simpleType>
         </xsd:attribute>
+        <xsd:attribute name="required" type="xsd:boolean" default="false"/>
+        <xsd:attribute name="empty" type="cli:empty" default="DEFAULT"/>
     </xsd:complexType>
 
     <xsd:simpleType name="simple">
         <xsd:restriction base="xsd:string">
-            <xsd:pattern value="[A-Za-z0-9]"/>
+            <xsd:pattern value="[A-Za-z0-9?]"/>
+        </xsd:restriction>
+    </xsd:simpleType>
+
+    <xsd:simpleType name="empty" final="restriction">
+        <xsd:restriction base="xsd:string">
+            <xsd:enumeration value="FORCE"/>
+            <xsd:enumeration value="DEFAULT"/>
+            <xsd:enumeration value="FALSE"/>
         </xsd:restriction>
     </xsd:simpleType>
 

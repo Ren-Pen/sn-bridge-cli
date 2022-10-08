@@ -11,7 +11,7 @@ import java.util.HashSet;
 /**
  * XML的指令将会实例化成插件指令类
  */
-public class BeanCommand implements Command {
+public class BeanCommand implements Command, Comparable<BeanCommand> {
 
     @Getter
     private final Object bean;
@@ -21,31 +21,32 @@ public class BeanCommand implements Command {
     private final String name;
 
     @Getter
-    @Setter
     private final String prefix;
+
+    @Getter
+    private final HashMap<String, XMLBean.ArgumentBean> arguments = new HashMap<>();
 
     @Getter
     @Setter
     private String description = null;
 
     @Getter
-    private final HashMap<String, HashSet<String>> exclude = new HashMap<>();
+    @Setter
+    private XMLBean.Empty empty;
 
-    @Getter
-    private final HashMap<String, String> simple_arguments = new HashMap<>();
-
-    @Getter
-    private final HashMap<String, String> arguments = new HashMap<>();
-
-    @Getter
-    private final HashMap<String, String> arguments_description = new HashMap<>();
-
-    public BeanCommand(Object bean, Method method, String name, String prefix) {
+    public BeanCommand(Object bean, Method method, String name, String prefix, XMLBean.ArgumentBean[] arguments) {
         this.bean = bean;
         this.method = method;
         this.name = name;
         this.prefix = prefix;
         this.method.setAccessible(true);
+        if (arguments != null){
+
+            for (XMLBean.ArgumentBean argument : arguments) {
+                this.arguments.put(argument.getName(), argument);
+            }
+
+        }
     }
 
     @Override
@@ -65,4 +66,8 @@ public class BeanCommand implements Command {
         return false;
     }
 
+    @Override
+    public int compareTo(BeanCommand o) {
+        return this.name.compareTo(o.name);
+    }
 }

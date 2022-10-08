@@ -1,22 +1,34 @@
 package com.slimenano.framework;
 
+import com.slimenano.framework.event.impl.plugin.PluginLoadFailEvent;
+import com.slimenano.framework.event.impl.plugin.PluginLoadedEvent;
+import com.slimenano.framework.event.impl.plugin.PluginUnloadedEvent;
 import com.slimenano.sdk.commands.BeanCommand;
 import com.slimenano.sdk.commands.Command;
-import lombok.extern.slf4j.Slf4j;
+import com.slimenano.sdk.commands.XMLBean;
+import com.slimenano.sdk.event.annotations.CacheIndex;
+import com.slimenano.sdk.event.annotations.EventListener;
+import com.slimenano.sdk.event.annotations.Subscribe;
 import com.slimenano.sdk.framework.InitializationBean;
 import com.slimenano.sdk.framework.SystemInstance;
 import com.slimenano.sdk.framework.annotations.Mount;
 import com.slimenano.sdk.framework.exception.BeanRepeatNameException;
 import com.slimenano.sdk.logger.Marker;
+import lombok.extern.slf4j.Slf4j;
 
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 
 
 @SystemInstance
 @Slf4j
 @Marker("命令管理器")
+@EventListener
+@CacheIndex(version = 1)
 public class CMDManager implements InitializationBean {
 
     /**
@@ -27,13 +39,14 @@ public class CMDManager implements InitializationBean {
      * 插件命令，使用prefix@command输入，如果出现冲突，则将发出警告并使用插件path作为前缀
      * :prefix.xxxxxx
      */
-    public final HashMap<String, BeanCommand> pluginCommand = new HashMap<>(32);
+    public final ConcurrentHashMap<String, BeanCommand> pluginCommand = new ConcurrentHashMap<>(32);
 
     /**
      * 插件映射
+     * 插件命令的载入不会影响插件的载入情况，如果载入过程中出现异常则可能导致插件的部分功能失效
      * 插件类名 &lt;-&gt; 命令
      */
-    public final HashMap<String, List<String>> pluginMapping = new HashMap<>(32);
+    public final ConcurrentHashMap<String, List<String>> pluginMapping = new ConcurrentHashMap<>(32);
     @Mount
     private CMDGenerator generator;
 
@@ -43,6 +56,7 @@ public class CMDManager implements InitializationBean {
      * @param line
      */
     public void exec(String line) {
+        log.debug("指令输入：{}", line);
         Matcher matcher = Command.cmdMatcher.matcher(line);
         if (!matcher.matches()) {
             log.warn("错误的指令格式，请检查您的输入！ 输入：{}", line);
@@ -52,7 +66,9 @@ public class CMDManager implements InitializationBean {
         String prefix = matcher.group("prefix");
         String plugin = matcher.group("plugin");
         BeanCommand command;
+        // 判断指令正确性
         if (system != null) {
+            system = system.toLowerCase();
             if (!innerCommand.containsKey(system)) {
                 log.warn("没有找到指令 {} 请检查您的输入是否正确！", system);
                 return;
@@ -60,12 +76,14 @@ public class CMDManager implements InitializationBean {
             command = innerCommand.get(system);
 
         } else if (plugin != null && prefix != null) {
-            String key = prefix + "." + plugin;
+            plugin = plugin.toLowerCase();
+            prefix = prefix.toLowerCase();
+            String key = prefix + "@" + plugin;
             if (!pluginCommand.containsKey(key)) {
-                log.warn("没有找到插件指令 {} 请检查您的输入是否正确！", plugin);
+                log.warn("没有找到插件 {} 的指令 {} 请检查您的输入是否正确！", prefix, plugin);
                 return;
             }
-            command = innerCommand.get(key);
+            command = pluginCommand.get(key);
         } else {
             log.warn("错误的命令格式，请检查您的输入！ 输入：{}", line);
             return;
@@ -87,11 +105,18 @@ public class CMDManager implements InitializationBean {
         Matcher argSimpleM = Command.simplifyArgMatcher.matcher(line);
         while (argSimpleM.find()) {
             String name = argSimpleM.group("name");
-            if (!command.getSimple_arguments().containsKey(name)) {
-                log.warn("遇到了未知的简化参数：-{}", name);
-                continue;
+            boolean find = false;
+            for (XMLBean.ArgumentBean argument : command.getArguments().values()) {
+                if (name.equals(argument.getSimplify())) {
+                    name = argument.getName();
+                    find = true;
+                    break;
+                }
             }
-            name = command.getSimple_arguments().get(name);
+            if (!find) {
+                log.warn("遇到了未知的简化参数：-{}", name);
+                return;
+            }
 
             String arg = argSimpleM.group("arg");
             if (arg != null && arg.startsWith("\"") && arg.endsWith("\"")) {
@@ -101,20 +126,84 @@ public class CMDManager implements InitializationBean {
             args.put(name, arg);
         }
 
-        for (String an : args.keySet()) {
-            if(command.getExclude().containsKey(an)) {
-                for (String ean : args.keySet()) {
-                    if (command.getExclude().get(an).contains(ean)) {
-                        if (an.equals(ean)) {
-                            log.warn("无效的排除参数！参数：{} 排除：{} 输入：{}", an, ean, line);
-                        } else {
-                            log.warn("参数 {} 不允许与参数 {} 同时出现！输入：{}", an, ean, line);
-                            return;
-                        }
-                    }
+        if (command.getEmpty() == XMLBean.Empty.FORCE && !args.isEmpty()) {
+            log.warn("命令不接受任何参数！输入：{}", line);
+            return;
+        }
 
-                }
+        if (command.getEmpty() == XMLBean.Empty.FALSE && args.isEmpty()) {
+            log.warn("命令至少需要一个参数！输入：{}", line);
+            return;
+        }
+
+
+        // 必要参数
+        if (command.getArguments().values().stream().anyMatch(arg -> arg.isRequired() && !args.containsKey(arg.getName()))) {
+            log.warn("命令缺少必要参数！请使用帮助命令查询用法！ 输入：{}", line);
+            return;
+        }
+
+        // 依赖
+        if (!args.keySet().stream()
+                .allMatch(arg -> {
+                            String[] includes = command.getArguments().get(arg).getIncludes();
+                            if (includes == null) return true;
+                            return Arrays.stream(includes)
+                                    .allMatch(s -> {
+                                                if (!args.containsKey(s)) {
+                                                    log.warn("参数 {} 缺少依赖参数！ 依赖于：{} 输入：{}", arg, s, line);
+                                                    return false;
+                                                }
+                                                return true;
+                                            }
+                                    );
+                        }
+                )
+        ) {
+            return;
+        }
+
+        // 排斥
+        if (!args.keySet().stream()
+                .allMatch(arg -> {
+                            String[] excludes = command.getArguments().get(arg).getExcludes();
+                            if (excludes == null) return true;
+                            return Arrays.stream(excludes)
+                                    .noneMatch(s -> {
+                                                if (!args.containsKey(s)) {
+                                                    return false;
+                                                }
+                                                if (s.equals(arg)) {
+                                                    log.warn("无效的排除参数！参数：{} 排除：{} 输入：{}", arg, s, line);
+                                                    return false;
+                                                }
+                                                log.warn("参数 {} 不允许与参数 {} 同时使用！输入：{}", arg, s, line);
+                                                return true;
+                                            }
+                                    );
+                        }
+                )
+        ) {
+            return;
+        }
+
+
+        // 是否允许空
+        if (!args.entrySet().stream().allMatch(entry -> {
+
+            XMLBean.Empty empty = command.getArguments().get(entry.getKey()).getEmpty();
+            if (empty == XMLBean.Empty.FORCE && (entry.getValue() != null && !entry.getValue().isEmpty())) {
+                log.warn("参数 {} 不接受任何值！输入：{}", entry.getKey(), line);
+                return false;
             }
+            if (empty == XMLBean.Empty.FALSE && (entry.getValue() == null || entry.getValue().isEmpty())) {
+                log.warn("参数 {} 必须拥有一个值！输入：{}", entry.getKey(), line);
+                return false;
+            }
+            return true;
+
+        })) {
+            return;
         }
 
         try {
@@ -126,6 +215,55 @@ public class CMDManager implements InitializationBean {
             log.error("命令执行过程中出现了异常！输入：{}", line, e);
         }
 
+
+    }
+
+    @Subscribe
+    public void onPluginUnLoad(PluginUnloadedEvent event){
+        String path = event.getPayload().getInformation().getPath();
+        if(pluginMapping.containsKey(path)){
+            log.debug("即将卸载插件命令");
+            for (String s : pluginMapping.get(path)) {
+                if (pluginCommand.containsKey(s)){
+
+                    if (!pluginCommand.get(s).getBean().getClass().getClassLoader().equals(event.getPayload().getPluginLoader())){
+                        log.warn("命令注册在插件中但不属于该插件，命令不会移除！命令：{}", s);
+                    }else{
+                        log.debug("移除命令！命令：{}", s);
+                        pluginCommand.remove(s);
+                    }
+                }
+            }
+            pluginMapping.remove(path);
+        }
+    }
+
+    @Subscribe
+    public void onPluginLoaded(PluginLoadedEvent event){
+        String path = event.getPayload().getInformation().getPath();
+        HashMap<String, Object> extension = event.getPayload().getInformation().getExtension();
+        if (extension.containsKey("console")) {
+            pluginMapping.put(path, new LinkedList<>());
+            log.debug("插件拥有命令扩展，即将加载插件命令");
+            Object o = extension.get("console");
+            if (!(o instanceof HashMap)) {
+                throw new ClassCastException("Invalid XML Format");
+            }
+            try {
+                List<BeanCommand> commands = generator.generate((HashMap<String, Object>) o, event.getPayload().getContext());
+                for (BeanCommand command : commands) {
+                    String name = command.getPrefix() + "@" + command.getName();
+                    pluginMapping.get(path).add(name);
+                    if (pluginCommand.containsKey(name)){
+                        log.warn("{} 同前缀命令已被注册，原始命令被覆盖！ 源：{} 命令：{}", command.getBean(), pluginCommand.get(name).getBean(), name);
+                    }
+                    pluginCommand.put(name, command);
+                }
+
+            }catch (Exception e){
+                log.warn("加载插件命令扩展时出现错误，插件功能可能无法完全正常运行！", e);
+            }
+        }
 
     }
 

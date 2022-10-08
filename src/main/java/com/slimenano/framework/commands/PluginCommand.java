@@ -11,9 +11,9 @@ import com.slimenano.sdk.logger.Marker;
 import java.util.HashMap;
 
 @SystemInstance
-@InstanceAlias(alias = "command:pluginLoad")
+@InstanceAlias(alias = "command:plugin")
 @Slf4j
-@Marker("指令:插件加载")
+@Marker("指令:插件")
 public class PluginCommand implements Command {
 
     @Mount
@@ -23,10 +23,15 @@ public class PluginCommand implements Command {
     public boolean exec(HashMap<String, String> args) throws Exception {
 
         if (args.containsKey("load")){
-
+            manager.load(args.get("load"));
+            return true;
+        }
+        else if (args.containsKey("unload")){
+            manager.unload(args.get("unload"));
+            return true;
         }
 
 
-        return true;
+        return false;
     }
 }
