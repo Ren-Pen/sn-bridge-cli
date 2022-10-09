@@ -1,6 +1,5 @@
 package com.slimenano.framework;
 
-import com.slimenano.framework.event.impl.plugin.PluginLoadFailEvent;
 import com.slimenano.framework.event.impl.plugin.PluginLoadedEvent;
 import com.slimenano.framework.event.impl.plugin.PluginUnloadedEvent;
 import com.slimenano.sdk.commands.BeanCommand;
@@ -15,11 +14,14 @@ import com.slimenano.sdk.framework.annotations.Mount;
 import com.slimenano.sdk.framework.exception.BeanRepeatNameException;
 import com.slimenano.sdk.logger.Marker;
 import lombok.extern.slf4j.Slf4j;
+import org.jline.reader.Candidate;
+import org.jline.reader.Completer;
+import org.jline.reader.LineReader;
+import org.jline.reader.ParsedLine;
+import org.jline.reader.impl.completer.ArgumentCompleter;
+import org.jline.reader.impl.completer.StringsCompleter;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 
@@ -29,7 +31,7 @@ import java.util.regex.Matcher;
 @Marker("命令管理器")
 @EventListener
 @CacheIndex(version = 1)
-public class CMDManager implements InitializationBean {
+public class CMDManager implements InitializationBean, Completer {
 
     /**
      * 内置命令
@@ -40,13 +42,13 @@ public class CMDManager implements InitializationBean {
      * :prefix.xxxxxx
      */
     public final ConcurrentHashMap<String, BeanCommand> pluginCommand = new ConcurrentHashMap<>(32);
-
     /**
      * 插件映射
      * 插件命令的载入不会影响插件的载入情况，如果载入过程中出现异常则可能导致插件的部分功能失效
      * 插件类名 &lt;-&gt; 命令
      */
     public final ConcurrentHashMap<String, List<String>> pluginMapping = new ConcurrentHashMap<>(32);
+    private StringsCompleter stringsCompleter = new StringsCompleter();
     @Mount
     private CMDGenerator generator;
 
@@ -219,27 +221,28 @@ public class CMDManager implements InitializationBean {
     }
 
     @Subscribe
-    public void onPluginUnLoad(PluginUnloadedEvent event){
+    public void onPluginUnLoad(PluginUnloadedEvent event) {
         String path = event.getPayload().getInformation().getPath();
-        if(pluginMapping.containsKey(path)){
+        if (pluginMapping.containsKey(path)) {
             log.debug("即将卸载插件命令");
             for (String s : pluginMapping.get(path)) {
-                if (pluginCommand.containsKey(s)){
+                if (pluginCommand.containsKey(s)) {
 
-                    if (!pluginCommand.get(s).getBean().getClass().getClassLoader().equals(event.getPayload().getPluginLoader())){
+                    if (!pluginCommand.get(s).getBean().getClass().getClassLoader().equals(event.getPayload().getPluginLoader())) {
                         log.warn("命令注册在插件中但不属于该插件，命令不会移除！命令：{}", s);
-                    }else{
+                    } else {
                         log.debug("移除命令！命令：{}", s);
                         pluginCommand.remove(s);
                     }
                 }
             }
             pluginMapping.remove(path);
+            update();
         }
     }
 
     @Subscribe
-    public void onPluginLoaded(PluginLoadedEvent event){
+    public void onPluginLoaded(PluginLoadedEvent event) {
         String path = event.getPayload().getInformation().getPath();
         HashMap<String, Object> extension = event.getPayload().getInformation().getExtension();
         if (extension.containsKey("console")) {
@@ -254,17 +257,17 @@ public class CMDManager implements InitializationBean {
                 for (BeanCommand command : commands) {
                     String name = command.getPrefix() + "@" + command.getName();
                     pluginMapping.get(path).add(name);
-                    if (pluginCommand.containsKey(name)){
+                    if (pluginCommand.containsKey(name)) {
                         log.warn("{} 同前缀命令已被注册，原始命令被覆盖！ 源：{} 命令：{}", command.getBean(), pluginCommand.get(name).getBean(), name);
                     }
                     pluginCommand.put(name, command);
                 }
 
-            }catch (Exception e){
+            } catch (Exception e) {
                 log.warn("加载插件命令扩展时出现错误，插件功能可能无法完全正常运行！", e);
             }
+            update();
         }
-
     }
 
     @Override
@@ -277,11 +280,64 @@ public class CMDManager implements InitializationBean {
             }
             innerCommand.put(name, beanCommand);
         }
+        update();
 
+    }
+
+    private void update() {
+
+        ArrayList<String> list = new ArrayList<>(innerCommand.size() + pluginCommand.size());
+        list.addAll(innerCommand.keySet());
+        list.addAll(pluginCommand.keySet());
+        stringsCompleter = new StringsCompleter(list);
     }
 
     @Override
     public void onDestroy() throws Exception {
+    }
 
+    @Override
+    public void complete(LineReader reader, ParsedLine parsedLine, List<Candidate> candidates) {
+        StringsCompleter argCompleter;
+
+        String line = parsedLine.line();
+        Matcher matcher = Command.cmdMatcher.matcher(line);
+        if (!matcher.matches()) {
+            argCompleter = new StringsCompleter();
+        } else {
+            String system = matcher.group("system");
+            String prefix = matcher.group("prefix");
+            String plugin = matcher.group("plugin");
+            if (system != null) {
+                argCompleter = parseCMDParameters(innerCommand.containsKey(system), innerCommand.get(system), system);
+            } else if (prefix != null && plugin != null) {
+                String name = prefix + "@" + plugin;
+                argCompleter = parseCMDParameters(pluginCommand.containsKey(name), pluginCommand.get(name), name);
+            } else {
+                argCompleter = new StringsCompleter();
+            }
+        }
+
+
+        new ArgumentCompleter(stringsCompleter, argCompleter).complete(reader, parsedLine, candidates);
+    }
+
+    private StringsCompleter parseCMDParameters(boolean b, BeanCommand command, String system) {
+        StringsCompleter argCompleter;
+        if (!b) {
+            argCompleter = new StringsCompleter();
+        } else {
+            HashMap<String, XMLBean.ArgumentBean> arguments = command.getArguments();
+            ArrayList<String> list = new ArrayList<>(arguments.size());
+            for (XMLBean.ArgumentBean bean : arguments.values()) {
+                String s = bean.getEmpty() == XMLBean.Empty.FALSE ? "=" : "";
+                list.add("--" + bean.getName() + s);
+                if (bean.getSimplify() != null) {
+                    list.add("-" + bean.getSimplify() + s);
+                }
+            }
+            argCompleter = new StringsCompleter(list);
+        }
+        return argCompleter;
     }
 }

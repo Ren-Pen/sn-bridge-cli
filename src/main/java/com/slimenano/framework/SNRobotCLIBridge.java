@@ -2,6 +2,8 @@ package com.slimenano.framework;
 
 import com.slimenano.framework.config.RobotConfiguration;
 import com.slimenano.framework.core.BaseRobot;
+import com.slimenano.sdk.console.AlertHighlighter;
+import com.slimenano.framework.console.InputHighlighter;
 import com.slimenano.sdk.framework.DefaultIGUIBridge;
 import com.slimenano.sdk.framework.SystemInstance;
 import com.slimenano.sdk.framework.annotations.Mount;
@@ -11,7 +13,6 @@ import org.jline.reader.EndOfFileException;
 import org.jline.reader.LineReader;
 import org.jline.reader.LineReaderBuilder;
 import org.jline.reader.UserInterruptException;
-import org.jline.reader.impl.DefaultHighlighter;
 import org.jline.reader.impl.history.DefaultHistory;
 import org.jline.terminal.Terminal;
 import org.jline.terminal.TerminalBuilder;
@@ -32,7 +33,12 @@ public class SNRobotCLIBridge extends DefaultIGUIBridge {
     @Mount
     private RobotConfiguration rc;
 
+    @Mount
+    private InputHighlighter highlighter;
+
     private LineReader reader = null;
+
+    private Terminal terminal = null;
 
     public SNRobotCLIBridge() {
         super("alphe-1.0.0", "SNRobot-CLI-Bridge");
@@ -42,9 +48,9 @@ public class SNRobotCLIBridge extends DefaultIGUIBridge {
     public boolean confirm(String title, String content, int type) {
         if (reader == null) return false;
         System.out.println();
-        System.out.println(title);
+        System.out.println(AlertHighlighter.highlight(title));
         System.out.println();
-        System.out.println(content);
+        System.out.println(AlertHighlighter.highlight(content));
         if (type == OK_CANCEL) {
             System.out.println("(ok) or (cancel)?");
             while (true) {
@@ -80,7 +86,7 @@ public class SNRobotCLIBridge extends DefaultIGUIBridge {
                 log.warn(out);
                 break;
             default:
-                System.out.println(out);
+                AlertHighlighter.highlight(out);
                 break;
         }
     }
@@ -88,7 +94,7 @@ public class SNRobotCLIBridge extends DefaultIGUIBridge {
     @Override
     public void main(String[] args) throws Exception {
         log.info("环境已部署，正在运行");
-        Terminal terminal = TerminalBuilder.builder()
+        terminal = TerminalBuilder.builder()
                 .system(true)
                 .jansi(true)
                 .jna(true)
@@ -98,7 +104,8 @@ public class SNRobotCLIBridge extends DefaultIGUIBridge {
                 .terminal(terminal)
                 .history(new DefaultHistory())
                 .appName("SN Console Bridge")
-                .highlighter(new DefaultHighlighter())
+                .completer(manager)
+                .highlighter(highlighter)
                 .build();
 
         while (!Thread.currentThread().isInterrupted()) {

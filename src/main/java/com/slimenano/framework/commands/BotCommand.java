@@ -2,7 +2,6 @@ package com.slimenano.framework.commands;
 
 import com.slimenano.framework.config.RobotConfiguration;
 import com.slimenano.framework.core.BaseRobot;
-import com.slimenano.sdk.core.Robot;
 import com.slimenano.sdk.framework.SystemInstance;
 import com.slimenano.sdk.framework.annotations.InstanceAlias;
 import com.slimenano.sdk.framework.annotations.Mount;
@@ -10,6 +9,8 @@ import com.slimenano.sdk.logger.Marker;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.HashMap;
+
+import static org.fusesource.jansi.Ansi.ansi;
 
 @SystemInstance
 @InstanceAlias(alias = "command:bot")
@@ -23,20 +24,21 @@ public class BotCommand {
     @Mount
     private RobotConfiguration configuration;
 
-    public boolean login(HashMap<String, String> args){
 
-        if (!robot.isClose()){
+    public boolean login(HashMap<String, String> args) {
+
+        if (!robot.isClose()) {
             log.warn("当前程序已登录，请使用 logout 退出登录后再重新登录！");
             return false;
         }
 
-        if (args.containsKey("account")){
+        if (args.containsKey("account")) {
             configuration.setAccount(Long.parseLong(args.get("account")));
         }
-        if (args.containsKey("password")){
+        if (args.containsKey("password")) {
             configuration.setPassword(args.get("password"));
         }
-        if (args.containsKey("protocol")){
+        if (args.containsKey("protocol")) {
             configuration.setProtocol(args.get("protocol"));
         }
         if (args.containsKey("save")) {
@@ -47,11 +49,44 @@ public class BotCommand {
     }
 
     public boolean logout(HashMap<String, String> args) throws Exception {
-        if (robot.isClose()){
+        if (robot.isClose()) {
             log.warn("没有已登录的机器人");
             return false;
         }
         robot.close();
+        return true;
+    }
+
+    public boolean status(HashMap<String, String> args) throws Exception {
+
+        if (robot.isClose()) {
+            System.out.println(ansi()
+                    .a("机器人状态：")
+                    .fgBrightRed()
+                    .a("未登录")
+                    .reset());
+        } else {
+            long botId = robot.getBotId();
+            if (botId == 0L) {
+                System.out.println(ansi()
+                        .a("机器人状态：")
+                        .fgBrightRed()
+                        .a("离线")
+                        .reset());
+            } else {
+                System.out.println(ansi()
+                        .a("机器人状态：")
+                        .fgBrightGreen()
+                        .a("在线")
+                        .reset()
+                        .newline()
+                        .a("当前登录：")
+                        .fgBrightCyan()
+                        .a(botId)
+                        .reset());
+            }
+        }
+
         return true;
     }
 

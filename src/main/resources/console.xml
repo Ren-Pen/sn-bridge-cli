@@ -27,4 +27,6 @@
         </arguments>
     </command>
 
+    <command bean="name:command:bot" method="status" name="status" description="机器人状态查询" empty="FORCE"/>
+
 </console>
