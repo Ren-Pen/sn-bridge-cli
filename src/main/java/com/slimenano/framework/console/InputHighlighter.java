@@ -14,6 +14,7 @@ import org.jline.utils.AttributedStyle;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static com.slimenano.sdk.framework.ui.GUI_CONST.YES_NO;
 import static org.jline.utils.AttributedStyle.*;
 
 @SystemInstance
@@ -26,31 +27,49 @@ public class InputHighlighter implements Highlighter {
     @Override
     public AttributedString highlight(LineReader reader, String buffer) {
         AttributedStringBuilder asb = new AttributedStringBuilder();
-        Matcher matcher = Command.cmdMatcher.matcher(buffer);
-        // 先匹配命令
-        if (!matcher.matches()) {
-            asb.style(DEFAULT).append(buffer);
-        } else {
-            String system = matcher.group("system");
-            String prefix = matcher.group("prefix");
-            String plugin = matcher.group("plugin");
-            BeanCommand beanCommand = null;
-            if (system != null) {
-                beanCommand = manager.innerCommand.get(system);
-            } else if (prefix != null && plugin != null) {
-                String name = prefix + "@" + plugin;
-                beanCommand = manager.pluginCommand.get(name);
-            }
-
-            if (beanCommand == null) {
-                asb.style(new AttributedStyle().foreground(BRIGHT | RED)).append(buffer);
+        // 判断是否为对话框模式
+        if (manager.confirmMode == 0) {
+            Matcher matcher = Command.cmdMatcher.matcher(buffer);
+            // 先匹配命令
+            if (!matcher.matches()) {
+                asb.style(DEFAULT).append(buffer);
             } else {
-                String[] cmds = buffer.split(" ");
-                asb.style(new AttributedStyle().foreground(BRIGHT | GREEN)).append(cmds[0]);
-                asb.style(DEFAULT).append(buffer.substring(cmds[0].length()));
+                String system = matcher.group("system");
+                String prefix = matcher.group("prefix");
+                String plugin = matcher.group("plugin");
+                BeanCommand beanCommand = null;
+                if (system != null) {
+                    beanCommand = manager.innerCommand.get(system);
+                } else if (prefix != null && plugin != null) {
+                    String name = prefix + "@" + plugin;
+                    beanCommand = manager.pluginCommand.get(name);
+                }
+
+                if (beanCommand == null) {
+                    asb.style(new AttributedStyle().foreground(BRIGHT | RED)).append(buffer);
+                } else {
+                    String[] cmds = buffer.split(" ");
+                    asb.style(new AttributedStyle().foreground(BRIGHT | GREEN)).append(cmds[0]);
+                    asb.style(DEFAULT).append(buffer.substring(cmds[0].length()));
+
+                }
 
             }
-
+        } else {
+            String trim = buffer.trim();
+            if (manager.confirmMode == YES_NO) {
+                if ("yes".equalsIgnoreCase(trim) || "no".equalsIgnoreCase(trim)) {
+                    asb.style(new AttributedStyle().foreground(BRIGHT | GREEN)).append(buffer);
+                } else {
+                    asb.style(new AttributedStyle().foreground(BRIGHT | RED)).append(buffer);
+                }
+            }else{
+                if ("ok".equalsIgnoreCase(trim) || "cancel".equalsIgnoreCase(trim)) {
+                    asb.style(new AttributedStyle().foreground(BRIGHT | GREEN)).append(buffer);
+                } else {
+                    asb.style(new AttributedStyle().foreground(BRIGHT | RED)).append(buffer);
+                }
+            }
         }
 
         return asb.toAttributedString();

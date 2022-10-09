@@ -46,32 +46,38 @@ public class SNRobotCLIBridge extends DefaultIGUIBridge {
 
     @Override
     public boolean confirm(String title, String content, int type) {
-        if (reader == null) return false;
-        System.out.println();
-        System.out.println(AlertHighlighter.highlight(title));
-        System.out.println();
-        System.out.println(AlertHighlighter.highlight(content));
-        if (type == OK_CANCEL) {
-            System.out.println("(ok) or (cancel)?");
+        try {
+            if (reader == null) return false;
+            System.out.println();
+            System.out.println(AlertHighlighter.highlight(title));
+            System.out.println();
+            System.out.println(AlertHighlighter.highlight(content));
+            if (type == OK_CANCEL) {
+                System.out.println("(ok) or (cancel)?");
+                manager.confirmMode = OK_CANCEL;
+                while (true) {
+                    String s = reader.readLine(">").trim().toLowerCase();
+                    if ("ok".equals(s)) {
+                        return true;
+                    } else if ("cancel".equals(s)) {
+                        return false;
+                    }
+                    System.out.println("please input (ok) or (cancel)！");
+                }
+            }
+            System.out.println("(yes) or (no)?");
+            manager.confirmMode = YES_NO;
             while (true) {
                 String s = reader.readLine(">").trim().toLowerCase();
-                if ("ok".equals(s)) {
+                if ("yes".equals(s)) {
                     return true;
-                } else if ("cancel".equals(s)) {
+                } else if ("no".equals(s)) {
                     return false;
                 }
-                System.out.println("please input (ok) or (cancel)！");
+                System.out.println("please input (yes) or (no)！");
             }
-        }
-        System.out.println("(yes) or (no)?");
-        while (true) {
-            String s = reader.readLine(">").trim().toLowerCase();
-            if ("yes".equals(s)) {
-                return true;
-            } else if ("no".equals(s)) {
-                return false;
-            }
-            System.out.println("please input (yes) or (no)！");
+        }finally {
+            manager.confirmMode = 0;
         }
     }
 

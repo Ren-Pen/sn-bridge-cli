@@ -25,6 +25,9 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 
+import static com.slimenano.sdk.framework.ui.GUI_CONST.OK_CANCEL;
+import static com.slimenano.sdk.framework.ui.GUI_CONST.YES_NO;
+
 
 @SystemInstance
 @Slf4j
@@ -32,6 +35,9 @@ import java.util.regex.Matcher;
 @EventListener
 @CacheIndex(version = 1)
 public class CMDManager implements InitializationBean, Completer {
+
+    private final StringsCompleter yes_no = new StringsCompleter("yes", "no");
+    private final StringsCompleter ok_cancel = new StringsCompleter("ok", "cancel");
 
     /**
      * 内置命令
@@ -48,7 +54,11 @@ public class CMDManager implements InitializationBean, Completer {
      * 插件类名 &lt;-&gt; 命令
      */
     public final ConcurrentHashMap<String, List<String>> pluginMapping = new ConcurrentHashMap<>(32);
+
     private StringsCompleter stringsCompleter = new StringsCompleter();
+
+    public volatile int confirmMode = 0;
+
     @Mount
     private CMDGenerator generator;
 
@@ -298,28 +308,36 @@ public class CMDManager implements InitializationBean, Completer {
 
     @Override
     public void complete(LineReader reader, ParsedLine parsedLine, List<Candidate> candidates) {
-        StringsCompleter argCompleter;
+        if (confirmMode == 0) {
+            StringsCompleter argCompleter;
 
-        String line = parsedLine.line();
-        Matcher matcher = Command.cmdMatcher.matcher(line);
-        if (!matcher.matches()) {
-            argCompleter = new StringsCompleter();
-        } else {
-            String system = matcher.group("system");
-            String prefix = matcher.group("prefix");
-            String plugin = matcher.group("plugin");
-            if (system != null) {
-                argCompleter = parseCMDParameters(innerCommand.containsKey(system), innerCommand.get(system), system);
-            } else if (prefix != null && plugin != null) {
-                String name = prefix + "@" + plugin;
-                argCompleter = parseCMDParameters(pluginCommand.containsKey(name), pluginCommand.get(name), name);
-            } else {
+            String line = parsedLine.line();
+            Matcher matcher = Command.cmdMatcher.matcher(line);
+            if (!matcher.matches()) {
                 argCompleter = new StringsCompleter();
+            } else {
+                String system = matcher.group("system");
+                String prefix = matcher.group("prefix");
+                String plugin = matcher.group("plugin");
+                if (system != null) {
+                    argCompleter = parseCMDParameters(innerCommand.containsKey(system), innerCommand.get(system), system);
+                } else if (prefix != null && plugin != null) {
+                    String name = prefix + "@" + plugin;
+                    argCompleter = parseCMDParameters(pluginCommand.containsKey(name), pluginCommand.get(name), name);
+                } else {
+                    argCompleter = new StringsCompleter();
+                }
+            }
+
+
+            new ArgumentCompleter(stringsCompleter, argCompleter).complete(reader, parsedLine, candidates);
+        }else{
+            if (confirmMode == YES_NO){
+                yes_no.complete(reader, parsedLine, candidates);
+            }else{
+                ok_cancel.complete(reader, parsedLine, candidates);
             }
         }
-
-
-        new ArgumentCompleter(stringsCompleter, argCompleter).complete(reader, parsedLine, candidates);
     }
 
     private StringsCompleter parseCMDParameters(boolean b, BeanCommand command, String system) {
