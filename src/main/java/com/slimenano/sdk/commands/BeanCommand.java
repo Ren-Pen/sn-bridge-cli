@@ -52,7 +52,9 @@ public class BeanCommand implements Command, Comparable<BeanCommand> {
     @Override
     public boolean exec(HashMap<String, String> args) throws Exception {
 
+        ClassLoader appClassLoader = Thread.currentThread().getContextClassLoader();
         try {
+            Thread.currentThread().setContextClassLoader(bean.getClass().getClassLoader());
             return (boolean) method.invoke(bean, args);
         } catch (IllegalAccessException ignore) {
         } catch (InvocationTargetException e) {
@@ -61,6 +63,8 @@ public class BeanCommand implements Command, Comparable<BeanCommand> {
             else if (e.getCause() instanceof Error) {
                 throw (Error) e.getCause();
             }
+        } finally {
+            Thread.currentThread().setContextClassLoader(appClassLoader);
         }
 
         return false;
