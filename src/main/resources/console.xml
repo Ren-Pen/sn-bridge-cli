@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <console xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://www.bioelectronic.top/cli http://www.bioelectronic.top/schema/bridge-cli.xsd"
-         xmlns="http://www.bioelectronic.top/cli"
+         xsi:schemaLocation="http://www.slimenano.com/cli http://www.slimenano.com/schema/bridge-cli.xsd"
+         xmlns="http://www.slimenano.com/cli"
          prefix="system">
     <command bean="name:command:help" method="exec" name="help" description="显示帮助列表" empty="FORCE"/>
     <command bean="name:command:exit" method="exec" name="exit" empty="FORCE" description="退出"/>

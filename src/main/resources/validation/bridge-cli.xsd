@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
-            targetNamespace="http://www.bioelectronic.top/cli"
+            targetNamespace="http://www.slimenano.com/cli"
             elementFormDefault="qualified"
-            xmlns:cli="http://www.bioelectronic.top/cli">
+            xmlns:cli="http://www.slimenano.com/cli">
 
     <xsd:element name="console">
         <xsd:complexType>
