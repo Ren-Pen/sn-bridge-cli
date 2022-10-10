@@ -29,9 +29,12 @@ public class CMDGenerator {
 
     public List<BeanCommand> generateInner() throws Exception {
         log.debug("准备加载内置指令...");
+        long time = System.currentTimeMillis();
         Document commands = XMLReader.parse(SNRobotCLIBridge.class.getClassLoader().getResourceAsStream("console.xml"));
-        log.debug("内置指令文档已加载");
+        log.debug("内置XML文档读取耗时：{}ms", System.currentTimeMillis() - time);
+        time = System.currentTimeMillis();
         Object o = XMLReader.deepE2M(commands.getDocumentElement());
+        log.debug("XML对象转换耗时：{}ms", System.currentTimeMillis() - time);
         if (!(o instanceof HashMap)) {
             throw new ClassCastException("Invalid XML Format");
         }
