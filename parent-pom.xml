@@ -13,6 +13,9 @@
         <slimenano-framework.version>1.0.0</slimenano-framework.version>
         <maven.compiler.source>8</maven.compiler.source>
         <maven.compiler.target>8</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+        <maven.compiler.encoding>UTF-8</maven.compiler.encoding>
         <sn-bot.dir>D:/sn-robot-dev/release</sn-bot.dir>
     </properties>
 
