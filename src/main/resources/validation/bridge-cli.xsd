@@ -123,6 +123,7 @@
         </xsd:attribute>
         <xsd:attribute name="required" type="xsd:boolean" default="false"/>
         <xsd:attribute name="empty" type="cli:empty" default="DEFAULT"/>
+        <xsd:attribute name="defaultValue" type="xsd:normalizedString"/>
     </xsd:complexType>
 
     <xsd:simpleType name="simple">

@@ -50,6 +50,7 @@ public class CMDManager implements InitializationBean, Completer {
     private final StringsCompleter yes_no = new StringsCompleter("yes", "no");
     private final StringsCompleter ok_cancel = new StringsCompleter("ok", "cancel");
     public volatile int confirmMode = 0;
+    public volatile boolean disableH_C = false;
     private StringsCompleter stringsCompleter = new StringsCompleter();
     @Mount
     private CMDGenerator generator;
@@ -106,6 +107,7 @@ public class CMDManager implements InitializationBean, Completer {
             if (!command.getArguments().containsKey(name)) {
                 log.warn("遇到了未知的参数：--{}", name);
             }
+
             args.put(name, arg);
         }
 
@@ -124,7 +126,6 @@ public class CMDManager implements InitializationBean, Completer {
                 log.warn("遇到了未知的简化参数：-{}", name);
                 return;
             }
-
             String arg = argSimpleM.group("arg");
             if (arg != null && arg.startsWith("\"") && arg.endsWith("\"")) {
                 arg = arg.substring(1, arg.length() - 1);
@@ -132,6 +133,17 @@ public class CMDManager implements InitializationBean, Completer {
 
             args.put(name, arg);
         }
+
+        for (XMLBean.ArgumentBean argument : command.getArguments().values()) {
+            if (argument.getDefaultValue() != null){
+                String name = argument.getName();
+                String value = args.getOrDefault(name, "");
+                if (argument.getEmpty() != XMLBean.Empty.FORCE && (value == null || value.isEmpty())){
+                    args.put(name, argument.getDefaultValue());
+                }
+            }
+        }
+
 
         if (command.getEmpty() == XMLBean.Empty.FORCE && !args.isEmpty()) {
             log.warn("命令不接受任何参数！输入：{}", line);
@@ -199,11 +211,12 @@ public class CMDManager implements InitializationBean, Completer {
         if (!args.entrySet().stream().allMatch(entry -> {
 
             XMLBean.Empty empty = command.getArguments().get(entry.getKey()).getEmpty();
+            String defaultValue = command.getArguments().get(entry.getKey()).getDefaultValue();
             if (empty == XMLBean.Empty.FORCE && (entry.getValue() != null && !entry.getValue().isEmpty())) {
                 log.warn("参数 {} 不接受任何值！输入：{}", entry.getKey(), line);
                 return false;
             }
-            if (empty == XMLBean.Empty.FALSE && (entry.getValue() == null || entry.getValue().isEmpty())) {
+            if ( empty == XMLBean.Empty.FALSE && (entry.getValue() == null || entry.getValue().isEmpty())) {
                 log.warn("参数 {} 必须拥有一个值！输入：{}", entry.getKey(), line);
                 return false;
             }
@@ -303,6 +316,7 @@ public class CMDManager implements InitializationBean, Completer {
 
     @Override
     public void complete(LineReader reader, ParsedLine parsedLine, List<Candidate> candidates) {
+        if (disableH_C) return;
         if (confirmMode == 0) {
             StringsCompleter argCompleter;
 

@@ -1,6 +1,5 @@
 package com.slimenano.framework;
 
-import com.slimenano.framework.config.RobotConfiguration;
 import com.slimenano.framework.core.BaseRobot;
 import com.slimenano.sdk.console.AlertHighlighter;
 import com.slimenano.framework.console.InputHighlighter;
@@ -33,9 +32,6 @@ public class SNRobotCLIBridge extends DefaultIGUIBridge {
     private BaseRobot robot;
 
     @Mount
-    private RobotConfiguration rc;
-
-    @Mount
     private InputHighlighter highlighter;
 
     private LineReader reader = null;
@@ -44,6 +40,19 @@ public class SNRobotCLIBridge extends DefaultIGUIBridge {
 
     public SNRobotCLIBridge() {
         super("alphe-1.0.0", "SNRobot-CLI-Bridge");
+    }
+
+    @Override
+    public String prompt(String title, String content, String defaultValue) {
+        try {
+            manager.disableH_C = true;
+            String s;
+            s = reader.readLine(content + " > ", "SECURE".equals(title) ? '*' : null);
+            if (s == null || s.isEmpty()) return defaultValue;
+            return s;
+        }finally {
+            manager.disableH_C = false;
+        }
     }
 
     @Override
@@ -70,7 +79,7 @@ public class SNRobotCLIBridge extends DefaultIGUIBridge {
             System.out.println("(yes) or (no)?");
             manager.confirmMode = YES_NO;
             while (true) {
-                String s = reader.readLine(">").trim().toLowerCase();
+                String s = reader.readLine("> ").trim().toLowerCase();
                 if ("yes".equals(s)) {
                     return true;
                 } else if ("no".equals(s)) {
@@ -101,6 +110,7 @@ public class SNRobotCLIBridge extends DefaultIGUIBridge {
 
     @Override
     public void main(String[] args) throws Exception {
+        System.setProperty("mirai.no-desktop", "");
         log.info("环境已部署，正在运行");
         terminal = TerminalBuilder.builder()
                 .system(true)

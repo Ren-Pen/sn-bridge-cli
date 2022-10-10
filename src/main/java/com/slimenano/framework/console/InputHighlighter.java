@@ -28,6 +28,10 @@ public class InputHighlighter implements Highlighter {
     @Override
     public AttributedString highlight(LineReader reader, String buffer) {
         AttributedStringBuilder asb = new AttributedStringBuilder();
+        if (manager.disableH_C) {
+            asb.append(buffer);
+            return asb.toAttributedString();
+        }
         // 判断是否为对话框模式
         AttributedStyle red = new AttributedStyle().foreground(BRIGHT | RED);
         AttributedStyle green = new AttributedStyle().foreground(BRIGHT | GREEN);

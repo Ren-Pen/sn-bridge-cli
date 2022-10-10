@@ -20,10 +20,9 @@
     <command bean="name:command:bot" method="status" name="status" description="机器人状态查询" empty="FORCE"/>
     <command bean="name:command:bot" method="login" name="login" description="登录">
         <arguments>
-            <argument name="account" simplify="a" empty="FALSE" description="账号"/>
+            <argument name="account" simplify="a" empty="FALSE" description="账号" required="true"/>
             <argument name="password" simplify="p" empty="FALSE" description="密码"/>
-            <argument name="protocol" simplify="t" empty="FALSE" description="协议"/>
-            <argument name="save" simplify="s" empty="FORCE" description="保存登录信息"/>
+            <argument name="protocol" simplify="t" empty="FALSE" description="协议" defaultValue="ANDROID_PHONE"/>
         </arguments>
     </command>
     <command bean="name:command:bot" method="send" name="send" description="发送消息" empty="FALSE">

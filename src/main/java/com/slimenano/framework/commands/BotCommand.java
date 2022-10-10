@@ -1,13 +1,11 @@
 package com.slimenano.framework.commands;
 
-import com.slimenano.framework.config.RobotConfiguration;
 import com.slimenano.framework.core.BaseRobot;
 import com.slimenano.sdk.framework.SystemInstance;
 import com.slimenano.sdk.framework.annotations.InstanceAlias;
 import com.slimenano.sdk.framework.annotations.Mount;
 import com.slimenano.sdk.logger.Marker;
 import com.slimenano.sdk.robot.contact.SNContact;
-import com.slimenano.sdk.robot.contact.user.SNStranger;
 import com.slimenano.sdk.robot.messages.content.SNText;
 import com.slimenano.sdk.robot.messages.meta.SNMessageSource;
 import lombok.extern.slf4j.Slf4j;
@@ -26,9 +24,6 @@ public class BotCommand {
     @Mount
     private BaseRobot robot;
 
-    @Mount
-    private RobotConfiguration configuration;
-
 
     public boolean login(HashMap<String, String> args) {
 
@@ -36,20 +31,10 @@ public class BotCommand {
             log.warn("当前程序已登录，请使用 logout 退出登录后再重新登录！");
             return false;
         }
-
-        if (args.containsKey("account")) {
-            configuration.setAccount(Long.parseLong(args.get("account")));
-        }
-        if (args.containsKey("password")) {
-            configuration.setPassword(args.get("password"));
-        }
-        if (args.containsKey("protocol")) {
-            configuration.setProtocol(args.get("protocol"));
-        }
-        if (args.containsKey("save")) {
-            configuration.save();
-        }
-        robot.login();
+        long account = Long.parseLong(args.get("account"));
+        String password = args.get("password");
+        String protocol = args.get("protocol");
+        robot.login(account, password, protocol);
         return true;
     }
 
@@ -97,31 +82,31 @@ public class BotCommand {
 
     public boolean send(HashMap<String, String> args) throws Exception {
 
-        if (robot.isClose()){
+        if (robot.isClose()) {
             log.warn("机器人尚未登录");
             return false;
         }
 
         SNContact contact;
-        if (args.containsKey("friend")){
+        if (args.containsKey("friend")) {
             contact = robot.getFriend(Long.parseLong(args.get("friend")));
-        }else if(args.containsKey("group")){
+        } else if (args.containsKey("group")) {
             contact = robot.getGroup(Long.parseLong(args.get("group")));
-        }else if(args.containsKey("stranger")){
-             contact = robot.getStranger(Long.parseLong(args.get("stranger")));
-        }else{
+        } else if (args.containsKey("stranger")) {
+            contact = robot.getStranger(Long.parseLong(args.get("stranger")));
+        } else {
             log.warn("发送的消息没有目标");
             return false;
         }
-        if (contact == null){
+        if (contact == null) {
             log.warn("没有获取到目标，请检查输入是否正确！");
             return false;
         }
         SNMessageSource source = contact.sendMessage(robot, new SNText(args.get("msg")).toChain());
-        if (source == null){
+        if (source == null) {
             log.warn("发送消息失败，请检查日志！");
             return false;
-        }else{
+        } else {
             log.info("发送成功！\n源：{} \n内部：{}\n时间戳：{}", Arrays.toString(source.getIds()), Arrays.toString(source.getInternalIds()), source.getTime());
         }
         return true;

@@ -88,6 +88,7 @@ public class XMLBean {
         private String[] excludes;
         private String[] includes;
         private Empty empty;
+        private String defaultValue;
     }
 
 }
