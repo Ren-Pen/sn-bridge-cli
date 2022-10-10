@@ -28,7 +28,12 @@
             <xsd:element name="arguments" minOccurs="0">
                 <xsd:complexType>
                     <xsd:sequence>
-                        <xsd:element type="cli:argument" name="argument" maxOccurs="unbounded" minOccurs="0"/>
+                        <xsd:element type="cli:argument" name="argument" maxOccurs="unbounded" minOccurs="0">
+                            <xsd:unique name="includeUexclude">
+                                <xsd:selector xpath="cli:includes/cli:include|cli:excludes/cli:exclude"/>
+                                <xsd:field xpath="."/>
+                            </xsd:unique>
+                        </xsd:element>
                     </xsd:sequence>
                 </xsd:complexType>
                 <xsd:unique name="argsUnique">
@@ -38,10 +43,6 @@
                 <xsd:unique name="SargsUnique">
                     <xsd:selector xpath="cli:argument"/>
                     <xsd:field xpath="@simplify"/>
-                </xsd:unique>
-                <xsd:unique name="includeUexclude">
-                    <xsd:selector xpath="cli:argument/cli:includes/cli:include|cli:argument/cli:excludes/cli:exclude"/>
-                    <xsd:field xpath="."/>
                 </xsd:unique>
                 <xsd:key name="argumentNameKey">
                     <xsd:selector xpath="cli:argument"/>

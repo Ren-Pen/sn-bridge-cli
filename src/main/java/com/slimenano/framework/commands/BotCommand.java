@@ -6,8 +6,13 @@ import com.slimenano.sdk.framework.SystemInstance;
 import com.slimenano.sdk.framework.annotations.InstanceAlias;
 import com.slimenano.sdk.framework.annotations.Mount;
 import com.slimenano.sdk.logger.Marker;
+import com.slimenano.sdk.robot.contact.SNContact;
+import com.slimenano.sdk.robot.contact.user.SNStranger;
+import com.slimenano.sdk.robot.messages.content.SNText;
+import com.slimenano.sdk.robot.messages.meta.SNMessageSource;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Arrays;
 import java.util.HashMap;
 
 import static org.fusesource.jansi.Ansi.ansi;
@@ -87,6 +92,38 @@ public class BotCommand {
             }
         }
 
+        return true;
+    }
+
+    public boolean send(HashMap<String, String> args) throws Exception {
+
+        if (robot.isClose()){
+            log.warn("机器人尚未登录");
+            return false;
+        }
+
+        SNContact contact;
+        if (args.containsKey("friend")){
+            contact = robot.getFriend(Long.parseLong(args.get("friend")));
+        }else if(args.containsKey("group")){
+            contact = robot.getGroup(Long.parseLong(args.get("group")));
+        }else if(args.containsKey("stranger")){
+             contact = robot.getStranger(Long.parseLong(args.get("stranger")));
+        }else{
+            log.warn("发送的消息没有目标");
+            return false;
+        }
+        if (contact == null){
+            log.warn("没有获取到目标，请检查输入是否正确！");
+            return false;
+        }
+        SNMessageSource source = contact.sendMessage(robot, new SNText(args.get("msg")).toChain());
+        if (source == null){
+            log.warn("发送消息失败，请检查日志！");
+            return false;
+        }else{
+            log.info("发送成功！\n源：{} \n内部：{}\n时间戳：{}", Arrays.toString(source.getIds()), Arrays.toString(source.getInternalIds()), source.getTime());
+        }
         return true;
     }
 

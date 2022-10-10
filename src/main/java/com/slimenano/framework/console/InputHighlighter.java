@@ -3,6 +3,7 @@ package com.slimenano.framework.console;
 import com.slimenano.framework.CMDManager;
 import com.slimenano.sdk.commands.BeanCommand;
 import com.slimenano.sdk.commands.Command;
+import com.slimenano.sdk.commands.XMLBean;
 import com.slimenano.sdk.framework.SystemInstance;
 import com.slimenano.sdk.framework.annotations.Mount;
 import org.jline.reader.Highlighter;
@@ -28,6 +29,9 @@ public class InputHighlighter implements Highlighter {
     public AttributedString highlight(LineReader reader, String buffer) {
         AttributedStringBuilder asb = new AttributedStringBuilder();
         // 判断是否为对话框模式
+        AttributedStyle red = new AttributedStyle().foreground(BRIGHT | RED);
+        AttributedStyle green = new AttributedStyle().foreground(BRIGHT | GREEN);
+        AttributedStyle yellow = new AttributedStyle().foreground(YELLOW);
         if (manager.confirmMode == 0) {
             Matcher matcher = Command.cmdMatcher.matcher(buffer);
             // 先匹配命令
@@ -46,11 +50,35 @@ public class InputHighlighter implements Highlighter {
                 }
 
                 if (beanCommand == null) {
-                    asb.style(new AttributedStyle().foreground(BRIGHT | RED)).append(buffer);
+                    asb.style(red).append(buffer);
                 } else {
                     String[] cmds = buffer.split(" ");
                     asb.style(new AttributedStyle().foreground(BRIGHT | GREEN)).append(cmds[0]);
-                    asb.style(DEFAULT).append(buffer.substring(cmds[0].length()));
+                    String args = buffer.substring(cmds[0].length());
+                    int last = 0;
+                    boolean q = false;
+                    for (int i = 0; i < args.length(); i++) {
+                        if (args.charAt(i) == '\"'){
+                           if (q){
+                               asb.style(yellow).append(args.substring(last, i+1));
+                               last = i+1;
+                               q = false;
+                           }else{
+                               asb.style(DEFAULT).append(args.substring(last, i));
+                               last = i;
+                               q = true;
+                           }
+                        }
+                    }
+
+
+                    if (last < args.length()) {
+                        if (q){
+                            asb.style(red).append(args.substring(last));
+                        }else{
+                            asb.style(DEFAULT).append(args.substring(last));
+                        }
+                    }
 
                 }
 
@@ -59,15 +87,15 @@ public class InputHighlighter implements Highlighter {
             String trim = buffer.trim();
             if (manager.confirmMode == YES_NO) {
                 if ("yes".equalsIgnoreCase(trim) || "no".equalsIgnoreCase(trim)) {
-                    asb.style(new AttributedStyle().foreground(BRIGHT | GREEN)).append(buffer);
+                    asb.style(green).append(buffer);
                 } else {
-                    asb.style(new AttributedStyle().foreground(BRIGHT | RED)).append(buffer);
+                    asb.style(red).append(buffer);
                 }
-            }else{
+            } else {
                 if ("ok".equalsIgnoreCase(trim) || "cancel".equalsIgnoreCase(trim)) {
-                    asb.style(new AttributedStyle().foreground(BRIGHT | GREEN)).append(buffer);
+                    asb.style(green).append(buffer);
                 } else {
-                    asb.style(new AttributedStyle().foreground(BRIGHT | RED)).append(buffer);
+                    asb.style(red).append(buffer);
                 }
             }
         }

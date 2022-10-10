@@ -5,7 +5,6 @@ import com.slimenano.framework.event.impl.plugin.PluginUnloadedEvent;
 import com.slimenano.sdk.commands.BeanCommand;
 import com.slimenano.sdk.commands.Command;
 import com.slimenano.sdk.commands.XMLBean;
-import com.slimenano.sdk.event.annotations.CacheIndex;
 import com.slimenano.sdk.event.annotations.EventListener;
 import com.slimenano.sdk.event.annotations.Subscribe;
 import com.slimenano.sdk.framework.InitializationBean;
@@ -18,14 +17,12 @@ import org.jline.reader.Candidate;
 import org.jline.reader.Completer;
 import org.jline.reader.LineReader;
 import org.jline.reader.ParsedLine;
-import org.jline.reader.impl.completer.ArgumentCompleter;
 import org.jline.reader.impl.completer.StringsCompleter;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 
-import static com.slimenano.sdk.framework.ui.GUI_CONST.OK_CANCEL;
 import static com.slimenano.sdk.framework.ui.GUI_CONST.YES_NO;
 
 
@@ -33,11 +30,7 @@ import static com.slimenano.sdk.framework.ui.GUI_CONST.YES_NO;
 @Slf4j
 @Marker("命令管理器")
 @EventListener
-@CacheIndex(version = 1)
 public class CMDManager implements InitializationBean, Completer {
-
-    private final StringsCompleter yes_no = new StringsCompleter("yes", "no");
-    private final StringsCompleter ok_cancel = new StringsCompleter("ok", "cancel");
 
     /**
      * 内置命令
@@ -54,11 +47,10 @@ public class CMDManager implements InitializationBean, Completer {
      * 插件类名 &lt;-&gt; 命令
      */
     public final ConcurrentHashMap<String, List<String>> pluginMapping = new ConcurrentHashMap<>(32);
-
-    private StringsCompleter stringsCompleter = new StringsCompleter();
-
+    private final StringsCompleter yes_no = new StringsCompleter("yes", "no");
+    private final StringsCompleter ok_cancel = new StringsCompleter("ok", "cancel");
     public volatile int confirmMode = 0;
-
+    private StringsCompleter stringsCompleter = new StringsCompleter();
     @Mount
     private CMDGenerator generator;
 
@@ -110,6 +102,9 @@ public class CMDManager implements InitializationBean, Completer {
             String arg = argM.group("arg");
             if (arg != null && arg.startsWith("\"") && arg.endsWith("\"")) {
                 arg = arg.substring(1, arg.length() - 1);
+            }
+            if (!command.getArguments().containsKey(name)) {
+                log.warn("遇到了未知的参数：--{}", name);
             }
             args.put(name, arg);
         }
@@ -315,6 +310,7 @@ public class CMDManager implements InitializationBean, Completer {
             Matcher matcher = Command.cmdMatcher.matcher(line);
             if (!matcher.matches()) {
                 argCompleter = new StringsCompleter();
+                stringsCompleter.complete(reader, parsedLine, candidates);
             } else {
                 String system = matcher.group("system");
                 String prefix = matcher.group("prefix");
@@ -330,11 +326,11 @@ public class CMDManager implements InitializationBean, Completer {
             }
 
 
-            new ArgumentCompleter(stringsCompleter, argCompleter).complete(reader, parsedLine, candidates);
-        }else{
-            if (confirmMode == YES_NO){
+            argCompleter.complete(reader, parsedLine, candidates);
+        } else {
+            if (confirmMode == YES_NO) {
                 yes_no.complete(reader, parsedLine, candidates);
-            }else{
+            } else {
                 ok_cancel.complete(reader, parsedLine, candidates);
             }
         }

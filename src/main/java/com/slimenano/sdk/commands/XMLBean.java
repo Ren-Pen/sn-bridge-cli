@@ -3,11 +3,71 @@ package com.slimenano.sdk.commands;
 import lombok.Data;
 import lombok.Getter;
 
+import static org.fusesource.jansi.Ansi.ansi;
+
 @Data
 public class XMLBean {
 
     private String prefix;
     private CommandBean[] command;
+
+    public enum Empty {
+        FORCE(ansi().a("[")
+                .fgBrightBlue().a("无参")
+                .reset().a("]")
+                .fgBrightGreen().a(" %s ")
+                .reset().a("%s").toString()
+                , ansi().a("[-")
+                .fgBrightMagenta()
+                .a("%s").reset()
+                .a("][--").fgBrightCyan()
+                .a("%s").reset()
+                .a("] %s")
+                .toString()),
+        //"[-%s][--%s=[...]] %s"
+        DEFAULT(ansi().a("[")
+                .fgBrightBlue().a("默认")
+                .reset().a("]")
+                .fgBrightGreen().a(" %s ")
+                .reset().a("%s")
+                .toString()
+                , ansi().a("[-")
+                .fgBrightMagenta()
+                .a("%s").reset()
+                .a("][--").fgBrightCyan()
+                .a("%s").reset()
+                .a("=[").fgYellow()
+                .a("...").reset()
+                .a("]] %s")
+                .toString()
+        ),
+        FALSE(ansi().a("[")
+                .fgBrightBlue().a("供需")
+                .reset().a("]")
+                .fgBrightGreen().a(" %s ")
+                .reset().a("%s").toString()
+                , ansi().a("[-")
+                .fgBrightMagenta()
+                .a("%s").reset()
+                .a("][--").fgBrightCyan()
+                .a("%s").reset()
+                .a("=<").fgBrightRed()
+                .a("...").reset()
+                .a(">] %s")
+                .toString()
+        );
+
+        @Getter
+        private final String commandFormat;
+
+        @Getter
+        private final String argumentFormat;
+
+        Empty(String commandFormat, String argumentFormat) {
+            this.commandFormat = commandFormat;
+            this.argumentFormat = argumentFormat;
+        }
+    }
 
     @Data
     public static class CommandBean {
@@ -20,7 +80,7 @@ public class XMLBean {
     }
 
     @Data
-    public static class ArgumentBean{
+    public static class ArgumentBean {
         private String name;
         private String simplify;
         private String description;
@@ -28,23 +88,6 @@ public class XMLBean {
         private String[] excludes;
         private String[] includes;
         private Empty empty;
-    }
-
-    public enum Empty{
-        FORCE("[无参] %s %s", "[-%s][--%s] %s"),
-        DEFAULT("[默认] %s %s", "[-%s][--%s=[...]] %s"),
-        FALSE("[供需] %s %s", "[-%s][--%s=<...>] %s");
-
-        @Getter
-        private final String commandFormat;
-
-        @Getter
-        private final String argumentFormat;
-
-        Empty(String commandFormat, String argumentFormat) {
-            this.commandFormat = commandFormat;
-            this.argumentFormat = argumentFormat;
-        }
     }
 
 }

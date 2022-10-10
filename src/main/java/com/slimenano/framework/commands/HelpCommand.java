@@ -11,6 +11,8 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
+import static org.fusesource.jansi.Ansi.ansi;
+
 /**
  * 帮助命令
  */
@@ -26,7 +28,7 @@ public class HelpCommand implements Command {
 
         // 打印内部指令
         BeanCommand[] innerCommands = manager.innerCommand.values().toArray(new BeanCommand[0]);
-        System.out.println("[内置指令]");
+        System.out.println(ansi().a("[").fgBrightCyan().a("内置指令").reset().a("]"));
         print(innerCommands);
         manager.pluginMapping.forEach(((s, list) -> {
             BeanCommand[] commands = manager.pluginCommand.entrySet().stream()
@@ -34,7 +36,10 @@ public class HelpCommand implements Command {
                     .map(Map.Entry::getValue).distinct()
                     .toArray(BeanCommand[]::new);
             if (commands.length != 0) {
-                System.out.println("[插件指令][" + commands[0].getPrefix() + "][" + s + "]");
+                System.out.println(ansi()
+                                .a("[").fgBrightCyan().a("插件指令").reset().a("][")
+                                .fgBrightBlue().a(commands[0].getPrefix()).reset().a("][")
+                                .fgBrightMagenta().a(s).reset().a("]"));
                 print(commands);
             }
         }));
@@ -64,13 +69,13 @@ public class HelpCommand implements Command {
 
             if (argument.getIncludes() != null) {
                 for (String include : argument.getIncludes()) {
-                    System.out.printf("  |     |     |- [依赖][--%s]%n", include);
+                    System.out.printf(ansi().a("  |     |     |- [").fgBrightGreen().a("依赖").reset().a("][--").fgBrightGreen().a("%s").reset().a("]%n").toString(), include);
                 }
             }
 
             if (argument.getExcludes() != null) {
                 for (String exclude : argument.getExcludes()) {
-                    System.out.printf("  |     |     |- [冲突][--%s]%n", exclude);
+                    System.out.printf(ansi().a("  |     |     |- [").fgBrightRed().a("冲突").reset().a("][--").fgBrightRed().a("%s").reset().a("]%n").toString(), exclude);
                 }
             }
 

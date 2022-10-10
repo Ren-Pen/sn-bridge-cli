@@ -5,8 +5,6 @@
          prefix="system">
     <command bean="name:command:help" method="exec" name="help" description="显示帮助列表" empty="FORCE"/>
     <command bean="name:command:exit" method="exec" name="exit" empty="FORCE" description="退出"/>
-    <command bean="name:command:bot" method="logout" name="logout" empty="FORCE" description="登出"/>
-
     <command bean="name:command:plugin" method="exec" name="plugin" description="插件管理">
         <arguments>
             <argument name="load" simplify="l" description="加载" empty="FALSE">
@@ -18,6 +16,8 @@
         </arguments>
     </command>
 
+    <command bean="name:command:bot" method="logout" name="logout" empty="FORCE" description="登出"/>
+    <command bean="name:command:bot" method="status" name="status" description="机器人状态查询" empty="FORCE"/>
     <command bean="name:command:bot" method="login" name="login" description="登录">
         <arguments>
             <argument name="account" simplify="a" empty="FALSE" description="账号"/>
@@ -26,7 +26,38 @@
             <argument name="save" simplify="s" empty="FORCE" description="保存登录信息"/>
         </arguments>
     </command>
+    <command bean="name:command:bot" method="send" name="send" description="发送消息" empty="FALSE">
+        <arguments>
+            <argument name="friend" description="好友" empty="FALSE" simplify="f">
+                <includes>
+                    <include>msg</include>
+                </includes>
+                <excludes>
+                    <exclude>group</exclude>
+                    <exclude>stranger</exclude>
+                </excludes>
+            </argument>
+            <argument name="group" description="群" empty="FALSE" simplify="g">
+                <includes>
+                    <include>msg</include>
+                </includes>
+                <excludes>
+                    <exclude>friend</exclude>
+                    <exclude>stranger</exclude>
+                </excludes>
+            </argument>
+            <argument name="stranger" description="临时会话" empty="FALSE" simplify="s">
+                <includes>
+                    <include>msg</include>
+                </includes>
+                <excludes>
+                    <exclude>friend</exclude>
+                    <exclude>group</exclude>
+                </excludes>
+            </argument>
+            <argument name="msg" empty="FALSE" description="待发送消息" simplify="m"/>
+        </arguments>
+    </command>
 
-    <command bean="name:command:bot" method="status" name="status" description="机器人状态查询" empty="FORCE"/>
 
 </console>

@@ -19,6 +19,8 @@ import org.jline.terminal.TerminalBuilder;
 
 import java.nio.charset.StandardCharsets;
 
+import static org.fusesource.jansi.Ansi.ansi;
+
 @Slf4j
 @SystemInstance
 @Marker("控制台")
@@ -92,7 +94,7 @@ public class SNRobotCLIBridge extends DefaultIGUIBridge {
                 log.warn(out);
                 break;
             default:
-                AlertHighlighter.highlight(out);
+                System.out.println(AlertHighlighter.highlight(out));;
                 break;
         }
     }
@@ -116,9 +118,14 @@ public class SNRobotCLIBridge extends DefaultIGUIBridge {
 
         while (!Thread.currentThread().isInterrupted()) {
             try {
-                String preString = "no login";
+                String preString = ansi().fgBrightRed().a("未登录").reset().toString();
                 if (!robot.isClose()) {
-                    preString = String.valueOf(robot.getBotId());
+                    long botId = robot.getBotId();
+                    if (botId != 0L) {
+                        preString = ansi().fgBrightGreen().a(String.valueOf(botId)).reset().toString();
+                    }else{
+                        preString = ansi().fgBrightRed().a("离线").reset().toString();
+                    }
                 }
                 String s = reader.readLine(preString + " > ").trim();
                 if (!s.isEmpty())
