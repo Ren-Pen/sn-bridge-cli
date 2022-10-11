@@ -82,8 +82,8 @@ public class BotCommand {
 
     public boolean send(HashMap<String, String> args) throws Exception {
 
-        if (robot.isClose()) {
-            log.warn("机器人尚未登录");
+        if (robot.getStatus()) {
+            log.warn("机器人尚未登录或离线");
             return false;
         }
 
