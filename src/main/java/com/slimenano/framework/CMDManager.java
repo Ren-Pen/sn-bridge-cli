@@ -8,7 +8,7 @@ import com.slimenano.sdk.commands.XMLBean;
 import com.slimenano.sdk.event.annotations.EventListener;
 import com.slimenano.sdk.event.annotations.Subscribe;
 import com.slimenano.sdk.framework.InitializationBean;
-import com.slimenano.sdk.framework.SystemInstance;
+import com.slimenano.nscan.framework.SystemInstance;
 import com.slimenano.sdk.framework.annotations.Mount;
 import com.slimenano.sdk.framework.exception.BeanRepeatNameException;
 import com.slimenano.sdk.logger.Marker;

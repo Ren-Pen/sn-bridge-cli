@@ -1,7 +1,7 @@
 package com.slimenano.framework.commands;
 
 import com.slimenano.framework.core.BaseRobot;
-import com.slimenano.sdk.framework.SystemInstance;
+import com.slimenano.nscan.framework.SystemInstance;
 import com.slimenano.sdk.framework.annotations.InstanceAlias;
 import com.slimenano.sdk.framework.annotations.Mount;
 import com.slimenano.sdk.logger.Marker;

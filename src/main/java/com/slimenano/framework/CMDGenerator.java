@@ -1,10 +1,10 @@
 package com.slimenano.framework;
 
 import com.slimenano.framework.commons.XMLReader;
+import com.slimenano.nscan.framework.SystemInstance;
 import com.slimenano.sdk.commands.BeanCommand;
 import com.slimenano.sdk.commands.XMLBean;
 import com.slimenano.sdk.framework.Context;
-import com.slimenano.sdk.framework.SystemInstance;
 import com.slimenano.sdk.framework.annotations.Mount;
 import com.slimenano.sdk.logger.Marker;
 import lombok.extern.slf4j.Slf4j;
@@ -12,7 +12,6 @@ import org.w3c.dom.Document;
 
 import java.lang.reflect.Method;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 

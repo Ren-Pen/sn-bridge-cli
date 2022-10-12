@@ -4,7 +4,7 @@ import com.slimenano.framework.plugin.PluginManager;
 import com.slimenano.framework.plugin.PluginMeta;
 import com.slimenano.sdk.access.Permission;
 import com.slimenano.sdk.commands.Command;
-import com.slimenano.sdk.framework.SystemInstance;
+import com.slimenano.nscan.framework.SystemInstance;
 import com.slimenano.sdk.framework.annotations.InstanceAlias;
 import com.slimenano.sdk.framework.annotations.Mount;
 import com.slimenano.sdk.framework.ui.GUI_CONST;

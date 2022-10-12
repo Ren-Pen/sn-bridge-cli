@@ -2,7 +2,7 @@ package com.slimenano.framework.commands;
 
 import com.slimenano.framework.RobotApplication;
 import com.slimenano.sdk.commands.Command;
-import com.slimenano.sdk.framework.SystemInstance;
+import com.slimenano.nscan.framework.SystemInstance;
 import com.slimenano.sdk.framework.annotations.InstanceAlias;
 import com.slimenano.sdk.logger.Marker;
 import lombok.extern.slf4j.Slf4j;

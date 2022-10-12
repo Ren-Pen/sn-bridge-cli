@@ -3,7 +3,7 @@ package com.slimenano.framework.commands;
 import com.slimenano.framework.CMDManager;
 import com.slimenano.sdk.commands.BeanCommand;
 import com.slimenano.sdk.commands.Command;
-import com.slimenano.sdk.framework.SystemInstance;
+import com.slimenano.nscan.framework.SystemInstance;
 import com.slimenano.sdk.framework.annotations.InstanceAlias;
 import com.slimenano.sdk.framework.annotations.Mount;
 
